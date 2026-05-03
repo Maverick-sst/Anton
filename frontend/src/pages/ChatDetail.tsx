@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from "react"
-import { useParams, useLocation } from "react-router-dom"
-import { useAuth, UserButton } from "@clerk/clerk-react"
+import { useEffect, useState } from "react"
+import { useParams } from "react-router-dom"
+import { useAuth } from "@clerk/clerk-react"
 import Sidebar from "../components/Sidebar"
 import MessageList from "../components/MessageList"
 import ChatInput from "../components/ChatInput"
@@ -25,10 +25,9 @@ type Citation = {
 
 export default function ChatDetail() {
   const { id: chatId } = useParams<{ id: string }>()
-  const location = useLocation()
   const { getToken } = useAuth()
 
-  const [file, setFile] = useState<{ id: string; path: string; embeddingStatus: string } | null>(null)
+  const [file, setFile] = useState<{ id: string; path: string; name: string; embeddingStatus: string } | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [streamingContent, setStreamingContent] = useState("")
   const [loading, setLoading] = useState(true)

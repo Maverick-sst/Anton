@@ -4,8 +4,7 @@
    Every function gets Clerk token → sets Bearer header.
    ═══════════════════════════════════════════════════════ */
 
-const BASE = "http://localhost:3000"
-
+const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000"
 type GetToken = () => Promise<string | null>
 
 /* ── Chat CRUD ─────────────────────────────────────── */

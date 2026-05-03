@@ -36,7 +36,7 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
   // highlight cited text on this page
   const makeTextRenderer = useCallback(
     (pageNumber: number) =>
-      ({ str, itemIndex }: { str: string; itemIndex: number }) => {
+      ({ str }: { str: string }) => {
         const pageCitations = citations.filter(c => c.pageNumber === pageNumber)
         if (pageCitations.length === 0) return str
 

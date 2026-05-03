@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useAuth, UserButton } from "@clerk/clerk-react"
+import { useAuth } from "@clerk/clerk-react"
 import Sidebar from "../components/Sidebar"
 import UploadZone from "../components/UploadZone"
 import { createChat } from "../lib/api"
