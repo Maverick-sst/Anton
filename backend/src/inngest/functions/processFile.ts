@@ -41,7 +41,7 @@ export const processFile = inngest.createFunction(
         const form = new FormData()
         form.append("file", pdfBuffer, { filename: "file.pdf", contentType: "application/pdf" })
 
-        const res = await fetch("http://localhost:8000/parse", {
+        const res = await fetch(`${process.env.PYTHON_SERVICE_URL}/parse`, {
           method: "POST",
           body: form,
           headers: form.getHeaders(),
