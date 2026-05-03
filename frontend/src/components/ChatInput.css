@@ -1,0 +1,29 @@
+.chat-input-container {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--color-hairline);
+  background-color: var(--color-canvas);
+}
+
+.chat-input {
+  flex: 1;
+  min-height: 40px;
+  max-height: 120px;
+  resize: none;
+  height: auto;
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 10px 14px;
+}
+
+.chat-send-btn {
+  flex-shrink: 0;
+  gap: var(--space-xs);
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -1,0 +1,78 @@
+.anton-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.anton-loader--fullscreen {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-canvas, #faf9f5);
+  z-index: 9999;
+}
+
+/* ── Outer ghost ring: slow counter-rotate ── */
+.anton-ring-outer {
+  animation: anton-spin-reverse 6s linear infinite;
+}
+
+/* ── Main spike ring: forward spin ── */
+.anton-ring-main {
+  animation: anton-spin 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* ── Per-spoke dash animation (staggered) ── */
+.anton-spoke {
+  animation: anton-dash 3s ease-in-out infinite;
+}
+.anton-spoke--0 { animation-delay: 0s; }
+.anton-spoke--1 { animation-delay: 0.15s; }
+.anton-spoke--2 { animation-delay: 0.3s; }
+.anton-spoke--3 { animation-delay: 0.45s; }
+
+/* ── Center dot pulse ── */
+.anton-dot {
+  animation: anton-pulse 2s ease-in-out infinite;
+}
+
+/* ── Label ── */
+.anton-loader__label {
+  color: var(--color-primary, #cc785c);
+  font-family: "StyreneB", Inter, sans-serif;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 500;
+  opacity: 0;
+  animation: anton-label-fade 2s ease-in-out infinite;
+}
+.anton-loader__label--md { font-size: 11px; }
+.anton-loader__label--lg { font-size: 13px; }
+
+/* ── Keyframes ── */
+@keyframes anton-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes anton-spin-reverse {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+@keyframes anton-dash {
+  0%, 100% { stroke-dashoffset: 0;   opacity: 1; }
+  40%       { stroke-dashoffset: var(--spoke-len, 60); opacity: 0.3; }
+  70%       { stroke-dashoffset: 0;   opacity: 1; }
+}
+
+@keyframes anton-pulse {
+  0%, 100% { opacity: 1;   r: 3; }
+  50%       { opacity: 0.4; r: 5; }
+}
+
+@keyframes anton-label-fade {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 1; }
+}

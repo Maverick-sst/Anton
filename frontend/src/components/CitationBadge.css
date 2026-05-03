@@ -1,0 +1,14 @@
+.citation-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-surface-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  margin-right: var(--space-xs);
+  margin-top: var(--space-xs);
+}

@@ -1,0 +1,109 @@
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-surface-dark);
+  border-right: 1px solid var(--color-hairline);
+}
+
+.pdf-viewer-header {
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-dark-elevated);
+  border-bottom: 1px solid var(--color-surface-dark-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.pdf-viewer-title {
+  color: var(--color-on-dark);
+  font-family: var(--font-code);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.pdf-viewer-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-nav-btn {
+  background: var(--color-surface-dark-elevated);
+  border: 1px solid var(--color-surface-dark-soft);
+  color: var(--color-on-dark);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pdf-page-info {
+  color: var(--color-on-dark-soft);
+  font-size: 12px;
+  font-family: var(--font-code);
+  min-width: 48px;
+  text-align: center;
+}
+
+.pdf-viewer-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background-color: #525659;
+}
+
+.pdf-citation-pills {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: var(--color-surface-dark-elevated);
+  border-top: 1px solid var(--color-surface-dark-soft);
+  flex-wrap: wrap;
+}
+
+.pdf-citation-pill {
+  background: var(--color-surface-dark);
+  border: 1px solid var(--color-surface-dark-soft);
+  color: var(--color-on-dark-soft);
+  font-size: 11px;
+  font-family: var(--font-sans);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.pdf-citation-pill.active {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.pdf-loading,
+.pdf-error {
+  color: var(--color-on-dark-soft);
+  font-size: 14px;
+  padding: 32px;
+  text-align: center;
+}
+
+/* Text highlight injected via customTextRenderer */
+.pdf-highlight {
+  background-color: rgba(204, 120, 92, 0.35);
+  border-radius: 2px;
+}
