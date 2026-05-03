@@ -41,7 +41,7 @@ export const processFile = inngest.createFunction(
         // 3. Call Python Parser
         const res = await fetch(`${process.env.PYTHON_SERVICE_URL}/parse`, {
           method: "POST",
-          body: form,
+          body: form.getBuffer(),
           headers: form.getHeaders(),
         })
 
