@@ -9,7 +9,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 const EMBEDDING_BATCH_SIZE = 50
 
 export const processFile = inngest.createFunction(
-  { id: "process-file", retries: 3, triggers: { event: "file/uploaded" } },
+  { id: "process-file", retries: 3, concurrency: 1, triggers: { event: "file/uploaded" } },
   async ({ event, step }) => {
     const { fileId, chatId } = event.data
 
@@ -25,8 +25,11 @@ export const processFile = inngest.createFunction(
         return prisma.file.findUniqueOrThrow({ where: { id: fileId } })
       })
 
+      // 1. Give the Python service a moment to wake up if it's on a cold start
+      await step.sleep("warmup-python", "3s")
+
       const chunks = await step.run("fetch-and-parse-pdf", async () => {
-        // 1. Fetch the buffer
+        // 2. Fetch the buffer
         const pdfRes = await fetch(fileRecord.path)
         if (!pdfRes.ok) throw new Error(`Failed to fetch file (${pdfRes.status})`)
         const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer())
