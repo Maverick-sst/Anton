@@ -2,7 +2,13 @@ const SIMILARITY_THRESHOLD = 0.3
 
 export const buildPrompt = (
   question: string,
-  chunks: { content: string; pageNumber: number; similarity: number }[],
+  chunks: { 
+    content: string; 
+    pageNumber: number; 
+    similarity: number;
+    startChar: number;
+    endChar: number;
+  }[],
   history: { role: string; content: string }[]
 ) => {
   const relevant = chunks.filter(c => c.similarity >= SIMILARITY_THRESHOLD)

@@ -6,36 +6,41 @@ import { prisma } from "../lib/prisma";
 import { inngest } from "../lib/inngest";
 
 export const handleUpload = async (req: Request, res: Response) => {
-    const user = (req as any).user
-    const { chatId } = req.body;
+    try {
+        const user = (req as any).user
+        const { chatId } = req.body;
 
-    if(!req.file) return res.status(400).json({error: "No file provided"});
-    if(!chatId) return res.status(400).json({error: "chatId required"});
+        if(!req.file) return res.status(400).json({error: "No file provided"});
+        if(!chatId) return res.status(400).json({error: "chatId required"});
 
-    const mime = await fileTypeFromBuffer(req.file.buffer)
-    if( !mime || mime.mime !== "application/pdf")return res.status(400).json({error: "Invalid file type"});
+        const mime = await fileTypeFromBuffer(req.file.buffer)
+        if( !mime || mime.mime !== "application/pdf") return res.status(400).json({error: "Invalid file type"});
 
-    const fileId = randomUUID();
-    const url = await uploadToCloudinary(req.file.buffer, fileId);
+        const fileId = randomUUID();
+        const url = await uploadToCloudinary(req.file.buffer, fileId);
 
-    const file = await prisma.file.create({
-        data: {
-            id: fileId,
-            name: req.file.originalname,
-            path: url,
-            chatId: chatId,
-            embeddingStatus: "EMBEDDING_PENDING",
-        }
-    })
+        const file = await prisma.file.create({
+            data: {
+                id: fileId,
+                name: req.file.originalname,
+                path: url,
+                chatId: chatId,
+                embeddingStatus: "EMBEDDING_PENDING",
+            }
+        })
 
-    // fire inngest event
-    await inngest.send({
-        name: "file/uploaded",
-        data: { fileId: file.id, chatId },
-    })
+        // fire inngest event
+        await inngest.send({
+            name: "file/uploaded",
+            data: { fileId: file.id, chatId },
+        })
 
-    return res.status(201).json({
-        fileId: file.id,
-        status: "EMBEDDING_PENDING"
-    })
+        return res.status(201).json({
+            fileId: file.id,
+            status: "EMBEDDING_PENDING"
+        })
+    } catch (err) {
+        console.error("[upload:handleUpload] error:", err);
+        return res.status(500).json({ error: "Internal server error during upload" });
+    }
 }

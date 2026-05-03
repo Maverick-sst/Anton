@@ -1,43 +1,31 @@
-import { v2 as cloudinary } from "cloudinary"
+import { createClient } from "@supabase/supabase-js"
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!,
-})
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
+)
+
+const BUCKET = process.env.SUPABASE_BUCKET!
 
 export const uploadToCloudinary = async (
   buffer: Buffer,
   fileId: string
 ): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const publicId = `anton/${fileId}`
+  const path = `${fileId}.pdf`
 
-    cloudinary.uploader.upload_stream(
-      {
-        resource_type: "raw",
-        type: "upload",
-        access_mode: "public",
-        public_id: publicId,
-        format: "pdf",
-      },
-      (err, result) => {
-        if (err) {
-          reject(err)
-          return
-        }
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, buffer, {
+      contentType: "application/pdf",
+      upsert: true,
+    })
 
-        console.log("[cloudinary:upload]", {
-          public_id: result?.public_id,
-          resource_type: result?.resource_type,
-          type: result?.type,
-          format: result?.format,
-          secure_url: result?.secure_url,
-        })
+  if (error) throw new Error(`Storage upload failed: ${error.message}`)
 
-        // Use Cloudinary's authoritative delivery URL returned by upload.
-        resolve(result!.secure_url)
-      }
-    ).end(buffer)
-  })
+  const { data } = supabase.storage
+    .from(BUCKET)
+    .getPublicUrl(path)
+
+  console.log("[storage:upload] success:", data.publicUrl)
+  return data.publicUrl
 }

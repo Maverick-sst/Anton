@@ -5,7 +5,7 @@ import { prisma } from "../lib/prisma"
 import { retrieveChunks } from "../services/rag/retrieval"
 import { buildPrompt } from "../services/rag/promptBuilder"
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 
 export const handleChat = async (req: Request, res: Response) => {
   const user = (req as any).user
@@ -61,6 +61,15 @@ export const handleChat = async (req: Request, res: Response) => {
   res.setHeader("Cache-Control", "no-cache")
   res.setHeader("Connection", "keep-alive")
 
+  // emit citations FIRST before tokens
+  const citations = result.relevant.map(c => ({
+    pageNumber: c.pageNumber,
+    startChar: c.startChar,
+    endChar: c.endChar,
+    content: c.content,
+  }))
+  res.write(`data: ${JSON.stringify({ citations })}\n\n`)
+
   const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: result.systemPrompt },
     ...history.map((m): ChatCompletionMessageParam => ({
@@ -92,8 +101,88 @@ export const handleChat = async (req: Request, res: Response) => {
   res.write(`data: ${JSON.stringify({ done: true })}\n\n`)
   res.end()
 
-  // step 7 → save assistant message
   await prisma.message.create({
     data: { chatId, role: "ASSISTANT", content: fullResponse }
   })
+}
+
+/* ── Chat CRUD ─────────────────────────────────────── */
+
+export const createChat = async (req: Request, res: Response) => {
+  const user = (req as any).user
+  const { name } = req.body
+
+  if (!name || typeof name !== "string") {
+    return res.status(400).json({ error: "name is required" })
+  }
+
+  const chat = await prisma.chat.create({
+    data: { name, userId: user.id },
+  })
+
+  return res.status(201).json({
+    chatId: chat.id,
+    name: chat.name,
+    createdAt: chat.createdAt,
+  })
+}
+
+export const getChats = async (req: Request, res: Response) => {
+  const user = (req as any).user
+
+  const chats = await prisma.chat.findMany({
+    where: { userId: user.id },
+    orderBy: { updatedAt: "desc" },
+    include: {
+      files: { select: { id: true, embeddingStatus: true } },
+    },
+  })
+
+  return res.json({ chats })
+}
+
+export const getChatById = async (req: Request, res: Response) => {
+  const user = (req as any).user
+  const { id } = req.params as { id: string }
+
+  const chat = await prisma.chat.findUnique({
+    where: { id },
+    include: {
+      messages: { orderBy: { createdAt: "asc" } },
+      files: true,
+    },
+  })
+
+  if (!chat) {
+    return res.status(404).json({ error: "Chat not found" })
+  }
+
+  if (chat.userId !== user.id) {
+    return res.status(403).json({ error: "Forbidden" })
+  }
+
+  return res.json({
+    chat: { id: chat.id, name: chat.name },
+    messages: chat.messages,
+    file: chat.files[0] ?? null,
+  })
+}
+
+export const deleteChat = async (req: Request, res: Response) => {
+  const user = (req as any).user
+  const { id } = req.params as { id: string }
+
+  const chat = await prisma.chat.findUnique({ where: { id } })
+
+  if (!chat) {
+    return res.status(404).json({ error: "Chat not found" })
+  }
+
+  if (chat.userId !== user.id) {
+    return res.status(403).json({ error: "Forbidden" })
+  }
+
+  await prisma.chat.delete({ where: { id } })
+
+  return res.json({ success: true })
 }

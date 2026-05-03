@@ -9,12 +9,20 @@ export const retrieveChunks = async (
   topK: number = 5
 ) => {
   const results = await prisma.$queryRaw`
-    SELECT id, content, "pageNumber", section, "chunkIndex",
+    SELECT id, content, "pageNumber", section, "chunkIndex", "startChar", "endChar",
       1 - (embedding <=> ${JSON.stringify(embedding)}::vector) AS similarity
     FROM "DocumentChunk"
+
     WHERE "fileId" = ${fileId}
     ORDER BY embedding <=> ${JSON.stringify(embedding)}::vector
     LIMIT ${topK}
   `
-  return results as { content: string, pageNumber: number, section: string, similarity: number }[]
+  return results as { 
+    content: string, 
+    pageNumber: number, 
+    section: string, 
+    similarity: number,
+    startChar: number,
+    endChar: number 
+  }[]
 }
