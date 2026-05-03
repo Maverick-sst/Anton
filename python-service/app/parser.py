@@ -15,7 +15,6 @@ def chunk_text(text: str, page_number: int, section: str):
     # Pre-calculate token-to-char offsets to avoid O(N^2) decoding
     # This is much faster for large pages
     token_offsets = [0]
-    cumulative_text = ""
     for i in range(len(tokens)):
         token_str = enc.decode([tokens[i]])
         token_offsets.append(token_offsets[-1] + len(token_str))
@@ -48,6 +47,7 @@ def chunk_text(text: str, page_number: int, section: str):
 def parse_pdf(buffer: bytes):
     doc = fitz.open(stream=buffer, filetype="pdf")
     all_chunks = []
+    page_count = len(doc)
 
     try:
         for page in doc:
@@ -60,4 +60,4 @@ def parse_pdf(buffer: bytes):
     finally:
         doc.close()
 
-    return {"chunks": all_chunks, "pageCount": len(doc)}
+    return {"chunks": all_chunks, "pageCount": page_count}
