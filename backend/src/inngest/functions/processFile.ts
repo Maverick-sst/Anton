@@ -25,22 +25,17 @@ export const processFile = inngest.createFunction(
         return prisma.file.findUniqueOrThrow({ where: { id: fileId } })
       })
 
-      // Replace the entire fetch-pdf-buffer step with this:
-      const pdfBuffer = await step.run("fetch-pdf-buffer", async () => {
-        const res = await fetch(fileRecord.path)
-        if (!res.ok) throw new Error(`Failed to fetch file (${res.status})`)
+      const chunks = await step.run("fetch-and-parse-pdf", async () => {
+        // 1. Fetch the buffer
+        const pdfRes = await fetch(fileRecord.path)
+        if (!pdfRes.ok) throw new Error(`Failed to fetch file (${pdfRes.status})`)
+        const pdfBuffer = Buffer.from(await pdfRes.arrayBuffer())
 
-        const buffer = Buffer.from(await res.arrayBuffer())
-        if (buffer.subarray(0, 4).toString("utf8") !== "%PDF") {
-          throw new Error("Missing %PDF header")
-        }
-        return buffer
-      })
-
-      const chunks = await step.run("parse-pdf", async () => {
+        // 2. Prepare Form Data
         const form = new FormData()
         form.append("file", pdfBuffer, { filename: "file.pdf", contentType: "application/pdf" })
 
+        // 3. Call Python Parser
         const res = await fetch(`${process.env.PYTHON_SERVICE_URL}/parse`, {
           method: "POST",
           body: form,
