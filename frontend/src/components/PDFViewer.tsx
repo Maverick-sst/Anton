@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
 import "react-pdf/dist/Page/TextLayer.css"
 import "react-pdf/dist/Page/AnnotationLayer.css"
@@ -27,14 +27,33 @@ type Props = {
 export default function PDFViewer({ url, fileName, citations = [], activePage }: Props) {
   const [numPages, setNumPages] = useState<number>(0)
   const [currentPage, setCurrentPage] = useState(activePage ?? 1)
+  const pageRefs = useRef<Record<number, HTMLDivElement | null>>({})
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  // jump to cited page when activePage changes
+  // Jump to cited page when activePage changes
   useEffect(() => {
-    if (activePage) setCurrentPage(activePage)
+    if (activePage && pageRefs.current[activePage]) {
+      pageRefs.current[activePage]?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
   }, [activePage])
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages)
+  }
+
+  // Update current page indicator on scroll
+  const handleScroll = () => {
+    if (!containerRef.current) return
+    const container = containerRef.current
+    const scrollPos = container.scrollTop + container.clientHeight / 3
+
+    for (let i = 1; i <= numPages; i++) {
+      const el = pageRefs.current[i]
+      if (el && el.offsetTop <= scrollPos && el.offsetTop + el.clientHeight > scrollPos) {
+        setCurrentPage(i)
+        break
+      }
+    }
   }
 
   // highlight cited text on this page
@@ -44,7 +63,6 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
         const pageCitations = citations.filter(c => c.pageNumber === pageNumber)
         if (pageCitations.length === 0) return str
 
-        // check if this text item overlaps any citation content
         const isHighlighted = pageCitations.some(c =>
           c.content.includes(str) || str.includes(c.content.slice(0, 20))
         )
@@ -56,6 +74,10 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
     [citations]
   )
 
+  const jumpToPage = (page: number) => {
+    pageRefs.current[page]?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
   return (
     <div className="pdf-viewer">
       <div className="pdf-viewer-header">
@@ -66,44 +88,38 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
           <span className="pdf-viewer-title">{fileName}</span>
         </div>
         <div className="pdf-viewer-nav">
-          <button
-            className="pdf-nav-btn"
-            disabled={currentPage <= 1}
-            onClick={() => setCurrentPage(p => p - 1)}
-          >
-            ‹
-          </button>
           <div className="pdf-page-indicator">
             <span className="current">{currentPage}</span>
             <span className="separator">/</span>
             <span className="total">{numPages}</span>
           </div>
-          <button
-            className="pdf-nav-btn"
-            disabled={currentPage >= numPages}
-            onClick={() => setCurrentPage(p => p + 1)}
-          >
-            ›
-          </button>
         </div>
       </div>
 
-      <div className="pdf-viewer-body">
-        <div className="pdf-container-inner">
-          <Document
-            file={url}
-            onLoadSuccess={onDocumentLoadSuccess}
-            loading={<div className="pdf-loading"><AntonLoader size="sm" /></div>}
-            error={<div className="pdf-error">Failed to load PDF.</div>}
-          >
-            <Page
-              pageNumber={currentPage}
-              scale={1.2}
-              customTextRenderer={makeTextRenderer(currentPage)}
-              renderAnnotationLayer={false}
-            />
-          </Document>
-        </div>
+      <div className="pdf-viewer-body" ref={containerRef} onScroll={handleScroll}>
+        <Document
+          file={url}
+          onLoadSuccess={onDocumentLoadSuccess}
+          loading={<div className="pdf-loading"><AntonLoader size="sm" /></div>}
+          error={<div className="pdf-error">Failed to load PDF.</div>}
+        >
+          {Array.from(new Array(numPages), (_, index) => (
+            <div
+              key={`page_${index + 1}`}
+              className="pdf-page-wrapper"
+              ref={el => { pageRefs.current[index + 1] = el }}
+            >
+              <div className="pdf-container-inner">
+                <Page
+                  pageNumber={index + 1}
+                  scale={1.2}
+                  customTextRenderer={makeTextRenderer(index + 1)}
+                  renderAnnotationLayer={false}
+                />
+              </div>
+            </div>
+          ))}
+        </Document>
       </div>
 
       {citations.length > 0 && (
@@ -112,7 +128,7 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
             <button
               key={i}
               className={`pdf-citation-pill ${currentPage === c.pageNumber ? "active" : ""}`}
-              onClick={() => setCurrentPage(c.pageNumber)}
+              onClick={() => jumpToPage(c.pageNumber)}
             >
               Page {c.pageNumber}
             </button>

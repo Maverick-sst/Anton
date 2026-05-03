@@ -166,3 +166,14 @@
   background-color: rgba(204, 120, 92, 0.35);
   border-radius: 2px;
 }
+
+.pdf-page-wrapper {
+  margin-bottom: 48px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.pdf-page-wrapper:last-child {
+  margin-bottom: 0;
+}
