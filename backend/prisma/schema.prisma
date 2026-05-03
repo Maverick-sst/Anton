@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+enum EmbeddingStatus {
+  EMBEDDING_PENDING
+  EMBEDDING_PROCESSING
+  EMBEDDING_SUCCESSFUL
+  EMBEDDING_FAILED
+}
+
+enum Role {
+  USER
+  ASSISTANT
+}
+
+model User {
+  id         String       @id @default(cuid())
+  clerkId    String       @unique
+  email      String       @unique
+  createdAt  DateTime     @default(now())
+  chats      Chat[]
+}
+
+
+model Chat {
+  id        String       @id @default(cuid())
+  name      String       
+  userId    String       
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  messages  Message[]    
+  files     File[]       
+}
+
+model File {
+  id              String         @id @default(cuid())
+  name            String
+  path            String
+  chatId          String        
+  chat            Chat           @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  chunks          DocumentChunk[]        
+  embeddingStatus EmbeddingStatus @default(EMBEDDING_PENDING)
+  @@unique([chatId,path])
+}
+
+model Message {
+  id        String        @id @default(cuid())
+  chatId    String
+  chat      Chat          @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  content   String?       @db.Text
+  role      Role   
+  createdAt DateTime      @default(now())              
+}
+
+
+model DocumentChunk {
+  id               String         @id @default(cuid())
+  content          String         @db.Text
+  pageNumber       Int?
+  section          String?
+  chunkIndex       Int
+
+  tokenCount       Int?
+  startChar        Int?
+  endChar          Int?
+
+  fileId           String
+  file             File           @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  embedding        Unsupported("vector(1536)")?
+
+}
