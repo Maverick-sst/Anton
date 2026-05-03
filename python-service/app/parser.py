@@ -11,44 +11,53 @@ def count_tokens(text: str) -> int:
 def chunk_text(text: str, page_number: int, section: str):
     tokens = enc.encode(text)
     chunks = []
-    index = 0
-    start_token = 0
+    
+    # Pre-calculate token-to-char offsets to avoid O(N^2) decoding
+    # This is much faster for large pages
+    token_offsets = [0]
+    cumulative_text = ""
+    for i in range(len(tokens)):
+        token_str = enc.decode([tokens[i]])
+        token_offsets.append(token_offsets[-1] + len(token_str))
 
-    while start_token < len(tokens):
-        end_token = min(start_token + CHUNK_SIZE, len(tokens))
-        chunk_tokens = tokens[start_token:end_token]
+    start_token_idx = 0
+    chunk_idx = 0
+    
+    while start_token_idx < len(tokens):
+        end_token_idx = min(start_token_idx + CHUNK_SIZE, len(tokens))
+        chunk_tokens = tokens[start_token_idx:end_token_idx]
         content = enc.decode(chunk_tokens)
-
-        # character offsets relative to page text
-        start_char = len(enc.decode(tokens[:start_token]))
-        end_char = start_char + len(content)
-
+        
         chunks.append({
             "content": content,
             "pageNumber": page_number,
             "section": section,
-            "chunkIndex": index,
+            "chunkIndex": chunk_idx,
             "tokenCount": len(chunk_tokens),
-            "startChar": start_char,
-            "endChar": end_char,
+            "startChar": token_offsets[start_token_idx],
+            "endChar": token_offsets[end_token_idx],
         })
-        index += 1
-        start_token += CHUNK_SIZE - OVERLAP
-
+        
+        chunk_idx += 1
+        start_token_idx += CHUNK_SIZE - OVERLAP
+        if start_token_idx >= len(tokens) and len(tokens) > 0:
+            break
+            
     return chunks
 
 def parse_pdf(buffer: bytes):
     doc = fitz.open(stream=buffer, filetype="pdf")
     all_chunks = []
 
-    for page in doc:
-        text = page.get_text().strip()
-        if not text:
-            continue
-        page_number = page.number + 1
-        section = ""
-        chunks = chunk_text(text, page_number, section)
-        all_chunks.append(chunks)
+    try:
+        for page in doc:
+            text = page.get_text().strip()
+            if not text:
+                continue
+            page_number = page.number + 1
+            chunks = chunk_text(text, page_number, "")
+            all_chunks.extend(chunks)
+    finally:
+        doc.close()
 
-    flat = [c for page_chunks in all_chunks for c in page_chunks]
-    return {"chunks": flat, "pageCount": len(doc)}
+    return {"chunks": all_chunks, "pageCount": len(doc)}
