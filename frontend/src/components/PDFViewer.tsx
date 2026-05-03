@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
+import "react-pdf/dist/esm/Page/TextLayer.css"
+import "react-pdf/dist/esm/Page/AnnotationLayer.css"
+import AntonLoader from "./AntonLoader"
+import "./PDFViewer.css"
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -55,7 +59,12 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
   return (
     <div className="pdf-viewer">
       <div className="pdf-viewer-header">
-        <span className="pdf-viewer-title">{fileName}</span>
+        <div className="pdf-header-left">
+          <div className="pdf-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <span className="pdf-viewer-title">{fileName}</span>
+        </div>
         <div className="pdf-viewer-nav">
           <button
             className="pdf-nav-btn"
@@ -64,7 +73,11 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
           >
             ‹
           </button>
-          <span className="pdf-page-info">{currentPage} / {numPages}</span>
+          <div className="pdf-page-indicator">
+            <span className="current">{currentPage}</span>
+            <span className="separator">/</span>
+            <span className="total">{numPages}</span>
+          </div>
           <button
             className="pdf-nav-btn"
             disabled={currentPage >= numPages}
@@ -76,19 +89,21 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
       </div>
 
       <div className="pdf-viewer-body">
-        <Document
-          file={url}
-          onLoadSuccess={onDocumentLoadSuccess}
-          loading={<div className="pdf-loading">Loading document...</div>}
-          error={<div className="pdf-error">Failed to load PDF.</div>}
-        >
-          <Page
-            pageNumber={currentPage}
-            width={480}
-            customTextRenderer={makeTextRenderer(currentPage)}
-            renderAnnotationLayer={false}
-          />
-        </Document>
+        <div className="pdf-container-inner">
+          <Document
+            file={url}
+            onLoadSuccess={onDocumentLoadSuccess}
+            loading={<div className="pdf-loading"><AntonLoader size="sm" /></div>}
+            error={<div className="pdf-error">Failed to load PDF.</div>}
+          >
+            <Page
+              pageNumber={currentPage}
+              scale={1.2}
+              customTextRenderer={makeTextRenderer(currentPage)}
+              renderAnnotationLayer={false}
+            />
+          </Document>
+        </div>
       </div>
 
       {citations.length > 0 && (
