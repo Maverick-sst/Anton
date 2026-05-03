@@ -31,6 +31,4 @@ dist-ssr
 *.sw?
 
 
-package.json
-package-lock.json
-bun.lock
+
