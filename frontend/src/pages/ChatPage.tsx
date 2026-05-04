@@ -12,7 +12,7 @@ export default function ChatPage() {
   const navigate = useNavigate()
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => window.innerWidth <= 768)
 
   // Create a chat on mount to provide a valid ID for UploadZone
   useEffect(() => {

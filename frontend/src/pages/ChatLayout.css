@@ -1,7 +1,7 @@
 .chat-layout {
   display: flex;
   height: 100vh;
-  width: 100vw;
+  width: 100%;
   overflow: hidden;
   background-color: var(--color-canvas);
 }
@@ -92,4 +92,37 @@
 
 .text-sm {
   font-size: 14px;
+}
+
+@media (max-width: 1024px) {
+  .chat-split-view {
+    flex-direction: column;
+  }
+
+  .chat-panel-pdf {
+    flex: 0 0 45%;
+    min-height: 260px;
+    border-right: none;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+
+  .chat-panel-messages {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-content-centered {
+    padding: var(--space-md);
+  }
+
+  .chat-main {
+    min-width: 0;
+  }
+
+  .chat-panel-pdf {
+    flex-basis: 42%;
+    min-height: 220px;
+  }
 }

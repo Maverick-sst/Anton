@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import { useAuth } from "@clerk/clerk-react"
 import Sidebar from "../components/Sidebar"
@@ -32,14 +32,21 @@ export default function ChatDetail() {
   const [streamingContent, setStreamingContent] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => window.innerWidth <= 768)
   const [citations, setCitations] = useState<Citation[]>([])
   const [activePage, setActivePage] = useState<number>(1)
+  const previousChatIdRef = useRef<string | undefined>(undefined)
 
 
   const fetchChat = async () => {
     if (!chatId) return
     try {
+      if (previousChatIdRef.current !== chatId) {
+        setCitations([])
+        setActivePage(1)
+        previousChatIdRef.current = chatId
+      }
+
       const data = await getChatById(getToken, chatId)
       setMessages(data.messages)
       setFile(data.file)
@@ -54,22 +61,21 @@ export default function ChatDetail() {
     }
   }
 
-  // Reset citations and activePage on chatId change
-  useEffect(() => {
-    setCitations([])
-    setActivePage(1)
-  }, [chatId])
-
   // Poll for status if pending/processing
   useEffect(() => {
-    fetchChat()
+    const initialFetchTimeout = setTimeout(() => {
+      void fetchChat()
+    }, 0)
 
     let intervalId: ReturnType<typeof setInterval>
     if (file?.embeddingStatus === "EMBEDDING_PENDING" || file?.embeddingStatus === "EMBEDDING_PROCESSING") {
-      intervalId = setInterval(fetchChat, 3000)
+      intervalId = setInterval(() => {
+        void fetchChat()
+      }, 3000)
     }
 
     return () => {
+      clearTimeout(initialFetchTimeout)
       if (intervalId) clearInterval(intervalId)
     }
   }, [chatId, file?.embeddingStatus])
@@ -116,7 +122,7 @@ export default function ChatDetail() {
               assistantMsg += data.token
               setStreamingContent(assistantMsg)
             }
-          } catch (e) {
+          } catch {
             // Ignore parse errors on partial streams
           }
         }
