@@ -98,8 +98,7 @@
 
 .pdf-viewer-body {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: auto; /* Updated from overflow-y: auto; overflow-x: hidden; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -176,4 +175,50 @@
 
 .pdf-page-wrapper:last-child {
   margin-bottom: 0;
+}
+
+/* --- NEW ZOOM CONTROLS STYLES --- */
+.pdf-zoom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 0;
+  background-color: var(--color-surface-dark-elevated);
+  border-bottom: 1px solid var(--color-surface-dark-soft);
+  flex-shrink: 0;
+}
+
+.pdf-zoom-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--color-surface-dark-soft);
+  background: var(--color-surface-dark);
+  color: var(--color-on-dark);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+}
+
+.pdf-zoom-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pdf-zoom-btn:not(:disabled):hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.pdf-zoom-level {
+  color: var(--color-on-dark-soft);
+  font-family: var(--font-code);
+  font-size: 12px;
+  min-width: 36px;
+  text-align: center;
 }

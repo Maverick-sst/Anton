@@ -29,6 +29,7 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
   const [currentPage, setCurrentPage] = useState(activePage ?? 1)
   const pageRefs = useRef<Record<number, HTMLDivElement | null>>({})
   const containerRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1.0);
 
   // Jump to cited page when activePage changes
   useEffect(() => {
@@ -96,6 +97,26 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
         </div>
       </div>
 
+      <div className="pdf-zoom-bar">
+        <button
+          className="pdf-zoom-btn"
+          onClick={() => setScale(s => Math.max(0.5, parseFloat((s - 0.2).toFixed(1))))}
+          disabled={scale <= 0.5}
+          aria-label="Zoom out"
+        >
+          −
+        </button>
+        <span className="pdf-zoom-level">{Math.round(scale * 100)}%</span>
+        <button
+          className="pdf-zoom-btn"
+          onClick={() => setScale(s => Math.min(2.0, parseFloat((s + 0.2).toFixed(1))))}
+          disabled={scale >= 2.0}
+          aria-label="Zoom in"
+        >
+          +
+        </button>
+      </div>
+
       <div className="pdf-viewer-body" ref={containerRef} onScroll={handleScroll}>
         <Document
           file={url}
@@ -112,9 +133,10 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
               <div className="pdf-container-inner">
                 <Page
                   pageNumber={index + 1}
-                  scale={1.2}
+                  scale={scale}
                   customTextRenderer={makeTextRenderer(index + 1)}
                   renderAnnotationLayer={false}
+                  renderTextLayer={true}
                 />
               </div>
             </div>
