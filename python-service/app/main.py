@@ -3,6 +3,10 @@ from app.parser import parse_pdf
 
 app = FastAPI()
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
 @app.post("/parse")
 async def parse(file: UploadFile = File(...)):
     try:
