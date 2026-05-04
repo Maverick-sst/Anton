@@ -9,7 +9,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
 const EMBEDDING_BATCH_SIZE = 50
 
 export const processFile = inngest.createFunction(
-  { id: "process-file", retries: 3, concurrency: 1, triggers: { event: "file/uploaded" } },
+  { id: "process-file", retries: 10, concurrency: 1, triggers: { event: "file/uploaded" } },
   async ({ event, step }) => {
     const { fileId, chatId } = event.data
 
@@ -25,8 +25,12 @@ export const processFile = inngest.createFunction(
         return prisma.file.findUniqueOrThrow({ where: { id: fileId } })
       })
 
-      // 1. Give the Python service a moment to wake up if it's on a cold start
-      await step.sleep("warmup-python", "3s")
+      // 1. Give the Python service plenty of time to wake up if it's on a cold start
+      // Render free tier can take up to 30-60s, but we'll start with 15s and rely on retries.
+      await step.run("ping-python-warmup", async () => {
+        await fetch(`${process.env.PYTHON_SERVICE_URL}/health`).catch(() => {})
+      })
+      await step.sleep("warmup-python", "15s")
 
       const chunks = await step.run("fetch-and-parse-pdf", async () => {
         // 2. Fetch the buffer
