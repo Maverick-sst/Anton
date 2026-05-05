@@ -7,6 +7,7 @@ import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
 import ChatPage from './pages/ChatPage'
 import ChatDetail from './pages/ChatDetail'
+import { Analytics } from '@vercel/analytics/react'
 
 export default function App() {
   const { isLoaded } = useAuth()
@@ -16,27 +17,30 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={
-        <>
-          <SignedIn><Navigate to="/chat" replace /></SignedIn>
-          <SignedOut><Landing /></SignedOut>
-        </>
-      } />
-      <Route path="/sign-in/*" element={<SignInPage />} />
-      <Route path="/sign-up/*" element={<SignUpPage />} />
-      <Route path="/chat" element={
-        <>
-          <SignedIn><ChatPage /></SignedIn>
-          <SignedOut><Navigate to="/sign-in" replace /></SignedOut>
-        </>
-      } />
-      <Route path="/chat/:id" element={
-        <>
-          <SignedIn><ChatDetail /></SignedIn>
-          <SignedOut><Navigate to="/sign-in" replace /></SignedOut>
-        </>
-      } />
-    </Routes>
+    <>
+      <Analytics />
+      <Routes>
+        <Route path="/" element={
+          <>
+            <SignedIn><Navigate to="/chat" replace /></SignedIn>
+            <SignedOut><Landing /></SignedOut>
+          </>
+        } />
+        <Route path="/sign-in/*" element={<SignInPage />} />
+        <Route path="/sign-up/*" element={<SignUpPage />} />
+        <Route path="/chat" element={
+          <>
+            <SignedIn><ChatPage /></SignedIn>
+            <SignedOut><Navigate to="/sign-in" replace /></SignedOut>
+          </>
+        } />
+        <Route path="/chat/:id" element={
+          <>
+            <SignedIn><ChatDetail /></SignedIn>
+            <SignedOut><Navigate to="/sign-in" replace /></SignedOut>
+          </>
+        } />
+      </Routes>
+    </>
   )
 }
