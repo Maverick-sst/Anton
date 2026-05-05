@@ -16,6 +16,7 @@ import { processFile } from './inngest/functions/processFile';
 const app = express();
 app.use(clerkMiddleware())
 app.use(cors());
+const PYTHON_URL = process.env.PYTHON_SERVICE_URL!
 
 app.use("/api/webhooks", webhookRoutes);
 
@@ -29,6 +30,16 @@ app.get("/health", (req, res) => {
     })
 });
 
+if (PYTHON_URL) {
+    setInterval(async () => {
+        try {
+            await fetch(`${PYTHON_URL}/health`)
+            console.log("[PYTHON_SERVICE] pinged successfully")
+        } catch (error) {
+            console.log("[PYTHON_SERVICE] ping failed: ", error)
+        }
+    }, 1000 * 60 * 10)
+}
 app.use("/api", secureRoutes)
 
 app.use("/api/upload", uploadRoutes)
