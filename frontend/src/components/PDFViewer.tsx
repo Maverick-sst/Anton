@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
 import "react-pdf/dist/Page/TextLayer.css"
 import "react-pdf/dist/Page/AnnotationLayer.css"
@@ -52,7 +52,14 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
     if (activePage && pageRefs.current[activePage]) {
       pageRefs.current[activePage]?.scrollIntoView({ behavior: "smooth", block: "start" })
     }
-  }, [activePage])
+  }, [activePage, numPages])
+
+  // Reset state when URL changes to prevent rendering pages of the previous document
+  useEffect(() => {
+    setNumPages(0)
+    setCurrentPage(1)
+    setVisiblePages(new Set([1]))
+  }, [url])
 
   // IntersectionObserver → track which pages are visible
   useEffect(() => {
@@ -105,11 +112,16 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
     return () => observerRef.current?.disconnect()
   }, [numPages, currentPage])
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+  const options = useMemo(() => ({
+    disableAutoFetch: true,
+    disableStream: true,
+  }), [])
+
+  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages)
     // seed first 3 pages
     setVisiblePages(new Set([1, 2, 3]))
-  }
+  }, [])
 
   const makeTextRenderer = useCallback(
     (pageNumber: number) =>
@@ -169,7 +181,7 @@ export default function PDFViewer({ url, fileName, citations = [], activePage }:
           onLoadSuccess={onDocumentLoadSuccess}
           loading={<div className="pdf-loading"><AntonLoader size="sm" /></div>}
           error={<div className="pdf-error">Failed to load PDF.</div>}
-          options={{ disableAutoFetch: true }}
+          options={options}
         >
           {Array.from({ length: numPages }, (_, i) => {
             const pageNum = i + 1
