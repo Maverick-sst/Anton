@@ -136,10 +136,9 @@ VITE_API_URL=
 ## What's Next
 
 - Audio transcription via Faster-Whisper — ask questions by voice in any language
-- Precise text highlighting within pages using character offsets already stored in the database
 - Multi-document support per chat session
-- Token budget enforcement at the prompt construction layer
-
+- Some Improvements---> Making it a little better towards answering follow up questions!
+- fixing frontend:--> div overflow in chatDetails.tsx page
 ---
 
 ## Deployment
